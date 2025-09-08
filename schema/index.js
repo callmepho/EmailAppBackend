@@ -10,6 +10,7 @@ const {
   getAllUsers,
   createUser,
   deleteUser,
+  loginUser,
 } = require("../resolvers/userResolver");
 
 const RootQuery = new GraphQLObjectType({
@@ -28,6 +29,7 @@ const Mutation = new GraphQLObjectType({
     deleteSentEmail,
     createUser,
     deleteUser,
+    loginUser,
   },
 });
 

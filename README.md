@@ -1,15 +1,18 @@
 # EmailAppBackend
 
 ## Description
+
 This is a backend App for a mock Email App
 
 ## Tech-stack
+
 - NodeJs
 - Express
 - GraphQL
 - MongoDB
 
 ## To Do
+
 - [ ] Models
   - [ ] Email
   - [ ] User
@@ -19,7 +22,15 @@ This is a backend App for a mock Email App
 - [ ] Auth
 
 ## Build Steps
+
 To run locally
+
 ```bashs
 node service.js
+```
+
+To run dev mode (nodemon) for auto restart on change
+
+```bashs
+npm run dev
 ```

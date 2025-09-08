@@ -3,18 +3,15 @@ const jwt = require("jsonwebtoken");
 const authMiddleware = (req) => {
   const authHeader = req.headers.authorization || "";
   if (authHeader.startsWith("Bearer ")) {
-    verifyJWT(authHeader);
+    const token = authHeader.split(" ")[1];
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      return decoded;
+    } catch (err) {
+      throw new Error("Invalid JWT");
+    }
   }
-  return {};
-};
-
-const verifyJWT = async (token) => {
-  try {
-    let authData = jwt.verify(token.split(" ")[1], JWT_SECRET);
-    return authData;
-  } catch (err) {
-    throw new Error("Invalid JWT");
-  }
+  return null;
 };
 
 module.exports = authMiddleware;

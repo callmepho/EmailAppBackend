@@ -7,8 +7,11 @@ const { GraphQLList, GraphQLID, GraphQLString } = require("graphql");
 
 const getAllEmails = {
   type: new GraphQLList(EmailType),
-  resolve(parent, args) {
-    return ReceivedEmail.find();
+  async resolve(parent, args, context) {
+    if (!context.user) throw new Error("Not authenticated");
+    const user = await UserResolver.getUserDetails(context.user.id);
+    if (!user) throw new Error("User not found");
+    return await ReceivedEmail.find({ recipient: context.user.id });
   },
 };
 

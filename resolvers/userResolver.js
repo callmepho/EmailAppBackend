@@ -4,14 +4,13 @@ const AuthType = require("../schema/auth");
 const bcrypt = require("bcrypt");
 const { GraphQLList, GraphQLID, GraphQLString } = require("graphql");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 
-const getAllUsers = {
-  type: new GraphQLList(UserType),
-  resolve() {
-    return User.find();
-  },
-};
+// const getAllUsers = {
+//   type: new GraphQLList(UserType),
+//   resolve() {
+//     return User.find();
+//   },
+// };
 
 const createUser = {
   type: UserType,
@@ -19,7 +18,7 @@ const createUser = {
     email: { type: GraphQLString },
     password: { type: GraphQLString },
   },
-  async resolve(args) {
+  async resolve(parent, args) {
     const salt = await bcrypt.genSalt(+process.env.SALT_ROUNDS);
     const encryptedPassword = await bcrypt.hash(args.password, salt);
     const user = new User({
@@ -36,7 +35,7 @@ const loginUser = {
     email: { type: GraphQLString },
     password: { type: GraphQLString },
   },
-  async resolve(args) {
+  async resolve(parent, args) {
     const foundUser = await findUserByEmail(args.email);
     if (!foundUser) throw new Error("Login with email not found");
     if (!(await bcrypt.compare(args.password, foundUser.password)))
@@ -52,20 +51,11 @@ const loginUser = {
   },
 };
 
-const verifyJWT = async (token) => {
-  try {
-    let authData = jwt.verify(token.split(" ")[1], JWT_SECRET);
-    return authData;
-  } catch (err) {
-    return false;
-  }
-};
-
 const getUserDetails = async (id) => {
   try {
-    let db_user = await DbUser.findById(id);
-    if (!db_user) throw new Error("User id not found");
-    return db_user;
+    let foundUser = await User.findById(id);
+    if (!foundUser) throw new Error("User id not found");
+    return foundUser;
   } catch (err) {
     throw new Error("Error while retrieving User from id");
   }
@@ -78,15 +68,15 @@ const findUserByEmail = async (email) => {
 const deleteUser = {
   type: UserType,
   args: { id: { type: GraphQLID } },
-  resolve(args) {
+  resolve(parent, args) {
     return User.findByIdAndDelete(args.id);
   },
 };
 
 module.exports = {
-  getAllUsers,
   createUser,
   findUserByEmail,
   deleteUser,
   loginUser,
+  getUserDetails,
 };

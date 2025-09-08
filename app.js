@@ -13,7 +13,7 @@ app.use(
   graphqlHTTP((req) => ({
     schema,
     graphiql: true,
-    context: authMiddleware(req),
+    context: { user: authMiddleware(req) },
   }))
 );
 

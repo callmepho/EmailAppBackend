@@ -1,18 +1,11 @@
-const {
-  GraphQLObjectType,
-  GraphQLID,
-  GraphQLString,
-  GraphQLBoolean,
-} = require("graphql");
-
-const UserType = require("./user");
+const { GraphQLObjectType, GraphQLID, GraphQLString } = require("graphql");
 
 const EmailType = new GraphQLObjectType({
   name: "Email",
   fields: () => ({
     id: { type: GraphQLID },
-    sender: { type: UserType },
-    recipient: { type: UserType },
+    sender: { type: GraphQLID },
+    recipient: { type: GraphQLID },
     title: { type: GraphQLString },
     subject: { type: GraphQLString },
     desc: { type: GraphQLString },

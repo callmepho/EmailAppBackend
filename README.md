@@ -13,13 +13,13 @@ This is a backend App for a mock Email App
 
 ## To Do
 
-- [ ] Models
-  - [ ] Email
-  - [ ] User
+- [x] Models
+  - [x] Email
+  - [x] User
 - [ ] Services
 - [ ] Controllers
 - [ ] Middleware (GraphQL)
-- [ ] Auth
+  - [x] Auth
 
 ## Build Steps
 

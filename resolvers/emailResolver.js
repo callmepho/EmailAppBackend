@@ -3,32 +3,42 @@ const EmailType = require("../schema/email.js");
 const UserType = require("../schema/user.js");
 const UserResolver = require("./userResolver.js");
 
-const { GraphQLList, GraphQLID, GraphQLString } = require("graphql");
+const {
+  GraphQLList,
+  GraphQLID,
+  GraphQLString,
+  GraphQLBoolean,
+} = require("graphql");
 
 const getAllEmails = {
-  type: new GraphQLList(EmailType),
+  type: {
+    inbox: new GraphQLList(EmailType),
+    outbox: new GraphQLList(EmailType),
+  },
   async resolve(parent, args, context) {
     if (!context.user) throw new Error("Not authenticated");
     const user = await UserResolver.getUserDetails(context.user.id);
     if (!user) throw new Error("User not found");
-    return await ReceivedEmail.find({ recipient: context.user.id });
+    const inbox = await ReceivedEmail.find({ recipient: context.user.id });
+    const outbox = await SentEmail.find({ sender: context.user.id });
+    return { inbox: inbox, outbox: outbox };
   },
 };
 
 const createEmail = {
   type: EmailType,
   args: {
-    sender: { type: GraphQLString },
     recipient: { type: GraphQLString },
     title: { type: GraphQLString },
     subject: { type: GraphQLString },
     desc: { type: GraphQLString },
   },
-  async resolve(parent, args) {
-    const sender = await UserResolver.findUserByEmail(args.sender);
+  async resolve(parent, args, context) {
+    if (!context.user) throw new Error("Not authenticated");
+    const user = await UserResolver.getUserDetails(context.user.id);
+    if (!user) throw new Error("User not found");
+    const sender = user;
     const recipient = await UserResolver.findUserByEmail(args.recipient);
-
-    if (!sender) throw new Error("Sender email not found");
     if (!recipient) throw new Error("Recipient email not found");
     const sendEmail = new SentEmail({
       sender: sender._id,
@@ -48,11 +58,6 @@ const createEmail = {
 
     await sendEmail.save();
     await receiveEmail.save();
-    await receiveEmail.populate([
-      { path: "sender", select: "id email" },
-      { path: "recipient", select: "id email" },
-    ]);
-
     return receiveEmail;
   },
 };
@@ -60,26 +65,55 @@ const createEmail = {
 const markEmailAsRead = {
   type: EmailType,
   args: { id: { type: GraphQLID } },
-  resolve(parent, args) {
-    return (
-      ReceivedEmail.findByIdAndUpdate(args.id, { read: true }), { new: true }
+  async resolve(parent, args, context) {
+    if (!context.user) throw new Error("Not authenticated");
+    const user = await UserResolver.getUserDetails(context.user.id);
+    if (!user) throw new Error("User not found");
+    const foundEmail = await ReceivedEmail.findById(args.id).populate(
+      "recipient"
     );
+    if (!foundEmail.recipient.id.equals(user._id))
+      throw new Error("Unable to delete email due to incorrect User");
+    const updatedEmail = await ReceivedEmail.findByIdAndUpdate(
+      args.id,
+      { read: true },
+      { new: true }
+    );
+
+    return updatedEmail;
   },
 };
 
 const deleteReceivedEmail = {
-  type: EmailType,
+  type: GraphQLBoolean,
   args: { id: { type: GraphQLID } },
-  resolve(parent, args) {
-    return ReceivedEmail.findByIdAndDelete(args.id);
+  async resolve(parent, args, context) {
+    if (!context.user) throw new Error("Not authenticated");
+    const user = await UserResolver.getUserDetails(context.user.id);
+    if (!user) throw new Error("User not found");
+    const foundEmail = await ReceivedEmail.findById(args.id).populate(
+      "recipient"
+    );
+    if (!foundEmail.recipient.id.equals(user._id))
+      throw new Error("Unable to delete email due to incorrect User");
+    await foundEmail.deleteOne();
+    return true;
   },
 };
 
 const deleteSentEmail = {
-  type: EmailType,
+  type: GraphQLBoolean,
   args: { id: { type: GraphQLID } },
-  resolve(parent, args) {
-    return SentEmail.findByIdAndDelete(args.id);
+  async resolve(parent, args, context) {
+    if (!context.user) throw new Error("Not authenticated");
+    const user = await UserResolver.getUserDetails(context.user.id);
+    if (!user) throw new Error("User not found");
+    const foundEmail = await SentEmail.findById(args.id).populate("sender");
+    if (!foundEmail) throw new Error("Email not found");
+    if (!foundEmail.sender.equals(user._id))
+      throw new Error("Unable to delete email due to incorrect User");
+    await foundEmail.deleteOne();
+    return true;
   },
 };
 

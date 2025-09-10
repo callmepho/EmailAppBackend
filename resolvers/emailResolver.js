@@ -1,20 +1,16 @@
 const { SentEmail, ReceivedEmail } = require("../models/Email.js");
 const EmailType = require("../schema/email.js");
-const UserType = require("../schema/user.js");
+const {
+  SentEmailType,
+  ReceivedEmailType,
+  EmailCollectionType,
+} = require("../schema/user.js");
 const UserResolver = require("./userResolver.js");
 
-const {
-  GraphQLList,
-  GraphQLID,
-  GraphQLString,
-  GraphQLBoolean,
-} = require("graphql");
+const { GraphQLID, GraphQLString, GraphQLBoolean } = require("graphql");
 
 const getAllEmails = {
-  type: {
-    inbox: new GraphQLList(EmailType),
-    outbox: new GraphQLList(EmailType),
-  },
+  type: EmailCollectionType,
   async resolve(parent, args, context) {
     if (!context.user) throw new Error("Not authenticated");
     const user = await UserResolver.getUserDetails(context.user.id);
@@ -26,7 +22,7 @@ const getAllEmails = {
 };
 
 const createEmail = {
-  type: EmailType,
+  type: SentEmailType,
   args: {
     recipient: { type: GraphQLString },
     title: { type: GraphQLString },
@@ -63,7 +59,7 @@ const createEmail = {
 };
 
 const markEmailAsRead = {
-  type: EmailType,
+  type: ReceivedEmailType,
   args: { id: { type: GraphQLID } },
   async resolve(parent, args, context) {
     if (!context.user) throw new Error("Not authenticated");

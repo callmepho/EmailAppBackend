@@ -6,6 +6,7 @@ const {
   markEmailAsRead,
   deleteReceivedEmail,
   deleteSentEmail,
+  getAllEmails,
 } = require("../resolvers/emailResolver");
 const {
   createUser,

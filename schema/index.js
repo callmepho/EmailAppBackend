@@ -1,6 +1,4 @@
 const { GraphQLObjectType, GraphQLSchema } = require("graphql");
-const UserType = require("./user");
-const User = require("../models/User");
 const {
   createEmail,
   markEmailAsRead,
@@ -12,20 +10,15 @@ const {
   createUser,
   deleteUser,
   loginUser,
+  currentUser,
 } = require("../resolvers/userResolver");
 
 const RootQuery = new GraphQLObjectType({
   name: "RootQueryType",
   fields: {
-    currentUser: {
-      type: UserType,
-      resolve: async (_, args, context) => {
-        if (!context.user) throw new Error("Not authenticated");
-        const user = await User.findById(context.user.id);
-        if (!user) throw new Error("User not found");
-        return user;
-      },
-    },
+    currentUser,
+    loginUser,
+    getAllEmails,
   },
 });
 
@@ -38,7 +31,6 @@ const Mutation = new GraphQLObjectType({
     deleteSentEmail,
     createUser,
     deleteUser,
-    loginUser,
   },
 });
 

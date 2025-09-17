@@ -51,6 +51,16 @@ const loginUser = {
   },
 };
 
+const currentUser = {
+  type: UserType,
+  resolve: async (_, args, context) => {
+    if (!context.user) throw new Error("Not authenticated");
+    const user = await User.findById(context.user.id);
+    if (!user) throw new Error("User not found");
+    return user;
+  },
+};
+
 const getUserDetails = async (id) => {
   try {
     let foundUser = await User.findById(id);
@@ -79,4 +89,5 @@ module.exports = {
   deleteUser,
   loginUser,
   getUserDetails,
+  currentUser,
 };
